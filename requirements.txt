@@ -1,0 +1,12 @@
+pandas==3.0.6
+numpy==2.5.4
+pyarrow==26.0.0
+requests==2.34.2
+statsmodels==0.15.0
+scipy==1.18.1
+scikit-learn==1.9.1
+altair==6.3.0
+vl-convert-python==1.9.0.post1
+pyfixest==0.60.0
+pytest==9.1.1
+tabulate==0.10.0

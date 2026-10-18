@@ -1,0 +1,11 @@
+step,rows,dropped
+"raw download (home purchase, 4 states)",1325582,0
+filter loan_purpose in ['1'],1325582,0
+filter occupancy_type in ['1'],1214896,110686
+filter lien_status in ['1'],1174317,40579
+filter construction_method in ['1'],1051991,122326
+"filter total_units in ['1', '2', '3', '4']",1051980,11
+filter business_or_commercial_purpose in ['2'],1035246,16734
+filter reverse_mortgage in ['2'],1034841,405
+filter open-end_line_of_credit in ['2'],1031850,2991
+"keep action_taken 1,2 (approved) or 3 (denied)",635352,396498

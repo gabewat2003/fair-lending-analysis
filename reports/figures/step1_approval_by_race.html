@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@6.4.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "layer": [{"mark": {"type": "bar", "clip": true}, "encoding": {"color": {"condition": {"test": "datum.is_reference", "value": "#9D9D9D"}, "value": "#4C78A8"}, "tooltip": [{"field": "group", "type": "nominal"}, {"field": "apps", "type": "quantitative"}, {"field": "approval_rate", "format": ".1%", "type": "quantitative"}, {"field": "AIR", "format": ".3f", "type": "quantitative"}], "x": {"axis": {"format": "%"}, "field": "approval_rate", "scale": {"domain": [0.5, 1.0]}, "title": "Approval rate", "type": "quantitative"}, "y": {"field": "label", "sort": ["Free Form Text Only (small n)", "2 or more minority races", "Black or African American", "Native Hawaiian or Other Pacific Islander", "American Indian or Alaska Native", "Race Not Available", "Asian", "White", "Joint"], "title": null, "type": "nominal"}}}, {"mark": {"type": "rule", "color": "black"}, "encoding": {"x": {"field": "rate_ci_low", "scale": {"domain": [0.5, 1.0]}, "type": "quantitative"}, "x2": {"field": "rate_ci_high"}, "y": {"field": "label", "sort": ["Free Form Text Only (small n)", "2 or more minority races", "Black or African American", "Native Hawaiian or Other Pacific Islander", "American Indian or Alaska Native", "Race Not Available", "Asian", "White", "Joint"], "title": null, "type": "nominal"}}}, {"data": {"name": "data-a143c70944be588f7bab6e45e9eba157"}, "mark": {"type": "rule", "color": "#E45756", "size": 2, "strokeDash": [6, 4]}, "encoding": {"x": {"field": "threshold", "scale": {"domain": [0.5, 1.0]}, "type": "quantitative"}}}], "data": {"name": "data-6d11e6de71678b136991c57fec09ae47"}, "height": 260, "title": {"text": "Approval rate by race (95% CI), 2023 home purchase, GA/IL/TX/MD", "subtitle": "Dashed red line = 80% of the reference (White) approval rate; grey bar = reference group"}, "width": 520, "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json", "datasets": {"data-6d11e6de71678b136991c57fec09ae47": [{"group": "White", "apps": 362980, "approvals": 334750, "approval_rate": 0.9222271199515125, "rate_ci_low": 0.9213514007160245, "rate_ci_high": 0.9230939023258568, "AIR": 1.0, "flag_4_5ths": false, "diff_pp": 0.0, "diff_ci_low_pp": null, "diff_ci_high_pp": null, "p_ztest": null, "p_fisher": null, "p_holm": null, "small_n": false, "is_reference": true, "threshold": 0.73778169596121, "label": "White"}, {"group": "Race Not Available", "apps": 97328, "approvals": 85232, "approval_rate": 0.8757192174913694, "rate_ci_low": 0.8736317855273104, "rate_ci_high": 0.87777699194807, "AIR": 0.949570012143442, "flag_4_5ths": false, "diff_pp": -4.650790246014314, "diff_ci_low_pp": -4.876814224588472, "diff_ci_high_pp": -4.427153936483565, "p_ztest": 0.0, "p_fisher": null, "p_holm": 0.0, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "Race Not Available"}, {"group": "Black or African American", "apps": 88848, "approvals": 74088, "approval_rate": 0.8338735818476499, "rate_ci_low": 0.831411820657933, "rate_ci_high": 0.8363064733686031, "AIR": 0.9041954674803883, "flag_4_5ths": false, "diff_pp": -8.835353810386259, "diff_ci_low_pp": -9.09634384543876, "diff_ci_high_pp": -8.576783794101898, "p_ztest": 0.0, "p_fisher": null, "p_holm": 0.0, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "Black or African American"}, {"group": "Asian", "apps": 61973, "approvals": 56029, "approval_rate": 0.9040872638084327, "rate_ci_low": 0.9017437446705238, "rate_ci_high": 0.906380690539328, "AIR": 0.9803303809325912, "flag_4_5ths": false, "diff_pp": -1.813985614307978, "diff_ci_low_pp": -2.063853452058647, "diff_ci_high_pp": -1.5684924300973222, "p_ztest": 3.6895615084209916e-53, "p_fisher": null, "p_holm": 1.8447807542104958e-52, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "Asian"}, {"group": "Joint", "apps": 17130, "approvals": 15837, "approval_rate": 0.9245183887915936, "rate_ci_low": 0.9204665866052913, "rate_ci_high": 0.9283798343771198, "AIR": 1.0024844951861767, "flag_4_5ths": false, "diff_pp": 0.22912688400811287, "diff_ci_low_pp": -0.18522094863250718, "diff_ci_high_pp": 0.6250769590097862, "p_ztest": 0.2735625222618412, "p_fisher": null, "p_holm": 0.2735625222618412, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "Joint"}, {"group": "American Indian or Alaska Native", "apps": 4007, "approvals": 3435, "approval_rate": 0.8572498128275517, "rate_ci_low": 0.8460761356036839, "rate_ci_high": 0.8677391646006294, "AIR": 0.9295430532043159, "flag_4_5ths": false, "diff_pp": -6.497730712396077, "diff_ci_low_pp": -7.618455363626955, "diff_ci_high_pp": -5.445146346187027, "p_ztest": 3.0025459735754505e-52, "p_fisher": null, "p_holm": 1.2010183894301802e-51, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "American Indian or Alaska Native"}, {"group": "2 or more minority races", "apps": 1951, "approvals": 1598, "approval_rate": 0.8190671450538185, "rate_ci_low": 0.8013634549303241, "rate_ci_high": 0.8355168375262705, "AIR": 0.8881403803185512, "flag_4_5ths": false, "diff_pp": -10.315997489769401, "diff_ci_low_pp": -12.088487139028844, "diff_ci_high_pp": -8.668698893225207, "p_ztest": 3.5668450238927895e-64, "p_fisher": null, "p_holm": 2.1401070143356737e-63, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "2 or more minority races"}, {"group": "Native Hawaiian or Other Pacific Islander", "apps": 982, "approvals": 833, "approval_rate": 0.8482688391038696, "rate_ci_low": 0.8244758065804769, "rate_ci_high": 0.8693477224261346, "AIR": 0.9198046996801272, "flag_4_5ths": false, "diff_pp": -7.395828084764289, "diff_ci_low_pp": -9.77670966170947, "diff_ci_high_pp": -5.286121455175563, "p_ztest": 6.0267753144250964e-18, "p_fisher": null, "p_holm": 1.808032594327529e-17, "small_n": false, "is_reference": false, "threshold": 0.73778169596121, "label": "Native Hawaiian or Other Pacific Islander"}, {"group": "Free Form Text Only", "apps": 153, "approvals": 122, "approval_rate": 0.7973856209150327, "rate_ci_low": 0.7267763170887855, "rate_ci_high": 0.8534274165683591, "AIR": 0.8646304187594879, "flag_4_5ths": false, "diff_pp": -12.484149903647978, "diff_ci_low_pp": -19.54561228654839, "diff_ci_high_pp": -6.87928617271875, "p_ztest": 8.265066452731673e-09, "p_fisher": null, "p_holm": 1.6530132905463347e-08, "small_n": true, "is_reference": false, "threshold": 0.73778169596121, "label": "Free Form Text Only (small n)"}], "data-a143c70944be588f7bab6e45e9eba157": [{"group": "White", "apps": 362980, "approvals": 334750, "approval_rate": 0.9222271199515125, "rate_ci_low": 0.9213514007160245, "rate_ci_high": 0.9230939023258568, "AIR": 1.0, "flag_4_5ths": false, "diff_pp": 0.0, "diff_ci_low_pp": null, "diff_ci_high_pp": null, "p_ztest": null, "p_fisher": null, "p_holm": null, "small_n": false, "is_reference": true, "threshold": 0.73778169596121, "label": "White"}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>

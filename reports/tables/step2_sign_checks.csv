@@ -1,0 +1,4 @@
+check,passed
+log_income > 0,True
+DTI >60 < 0 (vs <20),True
+DTI 50-60 < 0 (vs <20),True

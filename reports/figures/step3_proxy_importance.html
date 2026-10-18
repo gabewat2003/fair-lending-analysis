@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@6.4.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-75c5beb27ee70b09b64876809063530a"}, "mark": {"type": "bar"}, "encoding": {"color": {"field": "target", "scale": {"range": ["#4C78A8", "#F58518", "#54A24B"]}, "title": "Proxy target", "type": "nominal"}, "tooltip": [{"field": "target", "type": "nominal"}, {"field": "feature", "type": "nominal"}, {"field": "auc_drop", "format": ".3f", "type": "quantitative"}], "x": {"axis": {"format": ".2f", "tickCount": 8}, "field": "auc_drop", "title": "Drop in test AUC when feature is shuffled", "type": "quantitative"}, "y": {"field": "feature", "sort": ["tract_minority_population_percent", "state_num", "ffiec_msa_md_median_family_income", "tract_median_age_of_housing_units", "log_property_value", "ltv", "loan_type_code", "log_loan_amount", "tract_to_msa_income_percentage", "log_income", "dti_num", "tract_owner_occupied_units"], "title": null, "type": "nominal"}, "yOffset": {"field": "target", "type": "nominal"}}, "height": 360, "title": {"text": "Which 'neutral' features carry group information?", "subtitle": "Permutation importance, all-features proxy model"}, "width": 480, "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json", "datasets": {"data-75c5beb27ee70b09b64876809063530a": [{"target": "Black vs White", "feature": "log_income", "auc_drop": 0.0034772263774631275, "auc_drop_sd": 0.000140961374911334}, {"target": "Black vs White", "feature": "log_loan_amount", "auc_drop": 0.00924369221093171, "auc_drop_sd": 0.00043392098250230707}, {"target": "Black vs White", "feature": "log_property_value", "auc_drop": 0.0036492186492948385, "auc_drop_sd": 0.00031936034228494586}, {"target": "Black vs White", "feature": "ltv", "auc_drop": 0.02195081505584562, "auc_drop_sd": 0.0006303357331250186}, {"target": "Black vs White", "feature": "dti_num", "auc_drop": 0.00699933350161337, "auc_drop_sd": 0.00032079900939977407}, {"target": "Black vs White", "feature": "loan_type_code", "auc_drop": 0.011435418339991, "auc_drop_sd": 0.000582590349442436}, {"target": "Black vs White", "feature": "tract_minority_population_percent", "auc_drop": 0.1454615001730174, "auc_drop_sd": 0.0020303791228432426}, {"target": "Black vs White", "feature": "tract_to_msa_income_percentage", "auc_drop": 0.0073732756603572145, "auc_drop_sd": 0.00035236079717348333}, {"target": "Black vs White", "feature": "ffiec_msa_md_median_family_income", "auc_drop": 0.04601045497346754, "auc_drop_sd": 0.0011692944811714445}, {"target": "Black vs White", "feature": "tract_owner_occupied_units", "auc_drop": 0.006059449636697467, "auc_drop_sd": 0.00023480866472614813}, {"target": "Black vs White", "feature": "tract_median_age_of_housing_units", "auc_drop": 0.016728850740663704, "auc_drop_sd": 0.0005595584213287906}, {"target": "Black vs White", "feature": "state_num", "auc_drop": 0.07520527647442268, "auc_drop_sd": 0.0013058855076802881}, {"target": "Asian vs White", "feature": "log_income", "auc_drop": 0.012785304658277341, "auc_drop_sd": 0.0005504272870230266}, {"target": "Asian vs White", "feature": "log_loan_amount", "auc_drop": 0.016844222877178815, "auc_drop_sd": 0.0005534446698231596}, {"target": "Asian vs White", "feature": "log_property_value", "auc_drop": 0.02455938345956068, "auc_drop_sd": 0.00039781728281687427}, {"target": "Asian vs White", "feature": "ltv", "auc_drop": 0.014034502073567623, "auc_drop_sd": 0.00047643229750269294}, {"target": "Asian vs White", "feature": "dti_num", "auc_drop": 0.0016778858701086863, "auc_drop_sd": 0.00047483947873082653}, {"target": "Asian vs White", "feature": "loan_type_code", "auc_drop": 0.02131838648734514, "auc_drop_sd": 0.00012043309525933783}, {"target": "Asian vs White", "feature": "tract_minority_population_percent", "auc_drop": 0.09964425310103839, "auc_drop_sd": 0.000997432765479676}, {"target": "Asian vs White", "feature": "tract_to_msa_income_percentage", "auc_drop": 0.016648534243411794, "auc_drop_sd": 0.0004698046615982409}, {"target": "Asian vs White", "feature": "ffiec_msa_md_median_family_income", "auc_drop": 0.0597984614198868, "auc_drop_sd": 0.0016000608977943852}, {"target": "Asian vs White", "feature": "tract_owner_occupied_units", "auc_drop": 0.006534014163021751, "auc_drop_sd": 0.0002598241664415262}, {"target": "Asian vs White", "feature": "tract_median_age_of_housing_units", "auc_drop": 0.03161068738542925, "auc_drop_sd": 0.0008597048445747808}, {"target": "Asian vs White", "feature": "state_num", "auc_drop": 0.00865637125114933, "auc_drop_sd": 0.0001679651853975351}, {"target": "Hispanic vs Not Hispanic", "feature": "log_income", "auc_drop": 0.013005700751711636, "auc_drop_sd": 0.00028460047131880937}, {"target": "Hispanic vs Not Hispanic", "feature": "log_loan_amount", "auc_drop": 0.00178045514117382, "auc_drop_sd": 0.00027210528388010483}, {"target": "Hispanic vs Not Hispanic", "feature": "log_property_value", "auc_drop": 0.02813759067690804, "auc_drop_sd": 0.0008451611874195032}, {"target": "Hispanic vs Not Hispanic", "feature": "ltv", "auc_drop": 0.014509399577842474, "auc_drop_sd": 0.0006035329762905073}, {"target": "Hispanic vs Not Hispanic", "feature": "dti_num", "auc_drop": 0.0048762867249430245, "auc_drop_sd": 0.0006784494779415444}, {"target": "Hispanic vs Not Hispanic", "feature": "loan_type_code", "auc_drop": 0.00820497505368858, "auc_drop_sd": 0.0002072591877128457}, {"target": "Hispanic vs Not Hispanic", "feature": "tract_minority_population_percent", "auc_drop": 0.06425522642541763, "auc_drop_sd": 0.000979341494864347}, {"target": "Hispanic vs Not Hispanic", "feature": "tract_to_msa_income_percentage", "auc_drop": 0.006595582756860741, "auc_drop_sd": 0.000702330331005695}, {"target": "Hispanic vs Not Hispanic", "feature": "ffiec_msa_md_median_family_income", "auc_drop": 0.03529686110510244, "auc_drop_sd": 0.0010587169404233504}, {"target": "Hispanic vs Not Hispanic", "feature": "tract_owner_occupied_units", "auc_drop": 0.003543482855684554, "auc_drop_sd": 0.0001862190259648634}, {"target": "Hispanic vs Not Hispanic", "feature": "tract_median_age_of_housing_units", "auc_drop": 0.008797416017383907, "auc_drop_sd": 0.00035618194630131325}, {"target": "Hispanic vs Not Hispanic", "feature": "state_num", "auc_drop": 0.07538737153957402, "auc_drop_sd": 0.002914541514344793}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>
