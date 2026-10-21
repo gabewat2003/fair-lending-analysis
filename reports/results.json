@@ -5,6 +5,8 @@
   "black_rate": 0.8338735818476499,
   "black_air": 0.9041954674803884,
   "black_raw_diff_pp": -8.835353810386259,
+  "black_z_pooled": -80.44820196931376,
+  "black_z_lender_clustered": -10.55096370600136,
   "black_ame_pp": {
     "m0": -10.60883108604198,
     "m1": -5.896358554971988,
@@ -30,19 +32,58 @@
   "ablation": {
     "Observed outcomes (test set)": {
       "auc": null,
+      "black_air": 0.9091,
       "min_air": 0.8888
     },
     "A: all features": {
       "auc": 0.8105,
+      "black_air": 0.9023,
       "min_air": 0.9023
     },
     "B: drop all geography": {
       "auc": 0.7997,
+      "black_air": 0.9288,
       "min_air": 0.923
     },
     "C: drop tract minority %": {
       "auc": 0.8097,
+      "black_air": 0.9083,
       "min_air": 0.9083
+    },
+    "D: drop log_income": {
+      "auc": 0.8071,
+      "black_air": 0.9027,
+      "min_air": 0.9027
+    },
+    "D: drop log_loan_amount": {
+      "auc": 0.8073,
+      "black_air": 0.9004,
+      "min_air": 0.9004
+    },
+    "D: drop log_property_value": {
+      "auc": 0.7978,
+      "black_air": 0.8962,
+      "min_air": 0.8962
+    },
+    "D: drop ltv": {
+      "auc": 0.8036,
+      "black_air": 0.906,
+      "min_air": 0.906
+    },
+    "D: drop dti_num": {
+      "auc": 0.7463,
+      "black_air": 0.8919,
+      "min_air": 0.8919
+    },
+    "D: drop loan_type_code": {
+      "auc": 0.8018,
+      "black_air": 0.9072,
+      "min_air": 0.8954
+    },
+    "E: all features + random score noise": {
+      "auc": 0.7997,
+      "black_air": 0.9051,
+      "min_air": 0.9051
     }
   }
 }

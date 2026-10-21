@@ -78,38 +78,87 @@ def group_air(pred: pd.Series, groups: pd.Series) -> pd.Series:
     return rates / rates[config.REF_RACE]
 
 
+def _logit(p: np.ndarray) -> np.ndarray:
+    p = np.clip(p, 1e-9, 1 - 1e-9)
+    return np.log(p / (1 - p))
+
+
+def noise_matched_scores(s_tr: np.ndarray, s_te: np.ndarray, y_te: pd.Series,
+                         target_auc: float) -> tuple[np.ndarray, np.ndarray, float]:
+    """Add race-blind Gaussian noise to log-odds scores until test AUC falls to `target_auc`.
+
+    This is a pure accuracy-loss control: it degrades the model by the same amount
+    as dropping geography, but in a way that carries no information about any group.
+    The noise draws are fixed once, so AUC is monotone in the noise scale.
+    """
+    rng = np.random.default_rng(config.SEED)
+    z_tr, z_te = rng.standard_normal(len(s_tr)), rng.standard_normal(len(s_te))
+    lo, hi = 0.0, 10.0
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        if roc_auc_score(y_te, s_te + mid * z_te) > target_auc:
+            lo = mid
+        else:
+            hi = mid
+    sigma = (lo + hi) / 2
+    return s_tr + sigma * z_tr, s_te + sigma * z_te, sigma
+
+
 def ablation(df: pd.DataFrame) -> pd.DataFrame:
-    """Approval model with vs without geography; AIR on predicted approvals (test set)."""
+    """Approval model with vs without geography; AIR on predicted approvals (test set).
+
+    The model is trained on the lenders' observed decisions, which are the thing
+    under test, so "accuracy" here means agreement with those decisions.
+
+    Controls for "dropping geography only narrows the gap because the model got worse":
+      D: drop one non-geographic feature at a time (similar or larger AUC cost)
+      E: model A with race-blind random noise added to its scores, tuned to B's AUC
+    """
     y = df["approved"]
+    race = df["derived_race"]
     tr, te = train_test_split(df.index, test_size=0.3, stratify=y, random_state=config.SEED)
     assert not set(tr) & set(te), "train/test overlap"
+    all_feats = config.APPLICANT_FEATURES + config.GEO_FEATURES
     variants = {
-        "A: all features": config.APPLICANT_FEATURES + config.GEO_FEATURES,
-        "B: drop all geography": config.APPLICANT_FEATURES,
-        "C: drop tract minority %": [f for f in config.APPLICANT_FEATURES + config.GEO_FEATURES
-                                     if f != "tract_minority_population_percent"],
+        "A: all features": ("main", all_feats),
+        "B: drop all geography": ("main", config.APPLICANT_FEATURES),
+        "C: drop tract minority %": ("main", [f for f in all_feats
+                                             if f != "tract_minority_population_percent"]),
     }
-    big = df.loc[te, "derived_race"].value_counts()
+    for f in config.APPLICANT_FEATURES:
+        variants[f"D: drop {f}"] = ("control", [x for x in all_feats if x != f])
+    big = race[te].value_counts()
     big = [g for g in big.index if big[g] >= config.MIN_GROUP_N
            and g not in (config.REF_RACE, "Race Not Available", "Joint")]
 
+    def score_row(name, kind, s_tr, s_te, auc, **extra):
+        # Approve the same share of applicants the lenders approved in training data.
+        thr = np.quantile(s_tr, 1 - y[tr].mean())
+        pred = pd.Series((s_te >= thr).astype(int), index=te)
+        air = group_air(pred, race[te])
+        print(f"{name:<40} AUC={auc:.4f}  Black AIR={air['Black or African American']:.3f}"
+              f"  min AIR={air[big].min():.3f}")
+        return {"model": name, "kind": kind, "test_auc": auc,
+                **{f"AIR {g}": air[g] for g in big}, "min_AIR": air[big].min(),
+                "approval_rate_pred": pred.mean(), **extra}
+
     rows = []
-    actual_air = group_air(y[te], df.loc[te, "derived_race"])
-    rows.append({"model": "Observed outcomes (test set)", "test_auc": np.nan,
+    actual_air = group_air(y[te], race[te])
+    rows.append({"model": "Observed outcomes (test set)", "kind": "observed", "test_auc": np.nan,
                  **{f"AIR {g}": actual_air[g] for g in big},
                  "min_AIR": actual_air[big].min()})
-    for name, feats in variants.items():
+    scores = {}
+    for name, (kind, feats) in variants.items():
         clf = make_model(feats).fit(df.loc[tr, feats], y[tr])
-        p_tr = clf.predict_proba(df.loc[tr, feats])[:, 1]
-        p_te = clf.predict_proba(df.loc[te, feats])[:, 1]
-        # Approve the same share of applicants the lenders approved in training data.
-        thr = np.quantile(p_tr, 1 - y[tr].mean())
-        pred = pd.Series((p_te >= thr).astype(int), index=te)
-        air = group_air(pred, df.loc[te, "derived_race"])
-        rows.append({"model": name, "test_auc": roc_auc_score(y[te], p_te),
-                     **{f"AIR {g}": air[g] for g in big}, "min_AIR": air[big].min(),
-                     "approval_rate_pred": pred.mean()})
-        print(f"{name:<28} AUC={rows[-1]['test_auc']:.4f}  min AIR={rows[-1]['min_AIR']:.3f}")
+        s_tr = _logit(clf.predict_proba(df.loc[tr, feats])[:, 1])
+        s_te = _logit(clf.predict_proba(df.loc[te, feats])[:, 1])
+        scores[name] = (s_tr, s_te)
+        rows.append(score_row(name, kind, s_tr, s_te, roc_auc_score(y[te], s_te)))
+
+    auc_b = next(r["test_auc"] for r in rows if r["model"] == "B: drop all geography")
+    n_tr, n_te, sigma = noise_matched_scores(*scores["A: all features"], y[te], auc_b)
+    rows.append(score_row("E: all features + random score noise", "control", n_tr, n_te,
+                          roc_auc_score(y[te], n_te), noise_sd_logodds=sigma))
     return pd.DataFrame(rows)
 
 

@@ -40,10 +40,17 @@
 
 ## Ablation
 
-| model                        |   test_auc |   AIR Black or African American |   AIR Asian |   AIR American Indian or Alaska Native |   AIR 2 or more minority races |   min_AIR |   approval_rate_pred |
-|:-----------------------------|-----------:|--------------------------------:|------------:|---------------------------------------:|-------------------------------:|----------:|---------------------:|
-| Observed outcomes (test set) |   nan      |                          0.9091 |      0.9816 |                                 0.9204 |                         0.8888 |    0.8888 |             nan      |
-| A: all features              |     0.8105 |                          0.9023 |      0.9937 |                                 0.9397 |                         0.9095 |    0.9023 |               0.9011 |
-| B: drop all geography        |     0.7997 |                          0.9288 |      0.9998 |                                 0.9485 |                         0.923  |    0.923  |               0.9005 |
-| C: drop tract minority %     |     0.8097 |                          0.9083 |      0.9948 |                                 0.9423 |                         0.9169 |    0.9083 |               0.9009 |
+| model                                | kind     |   test_auc |   AIR Black or African American |   AIR Asian |   AIR American Indian or Alaska Native |   AIR 2 or more minority races |   min_AIR |   approval_rate_pred |   noise_sd_logodds |
+|:-------------------------------------|:---------|-----------:|--------------------------------:|------------:|---------------------------------------:|-------------------------------:|----------:|---------------------:|-------------------:|
+| Observed outcomes (test set)         | observed |   nan      |                          0.9091 |      0.9816 |                                 0.9204 |                         0.8888 |    0.8888 |             nan      |           nan      |
+| A: all features                      | main     |     0.8105 |                          0.9023 |      0.9937 |                                 0.9397 |                         0.9095 |    0.9023 |               0.9011 |           nan      |
+| B: drop all geography                | main     |     0.7997 |                          0.9288 |      0.9998 |                                 0.9485 |                         0.923  |    0.923  |               0.9005 |           nan      |
+| C: drop tract minority %             | main     |     0.8097 |                          0.9083 |      0.9948 |                                 0.9423 |                         0.9169 |    0.9083 |               0.9009 |           nan      |
+| D: drop log_income                   | control  |     0.8071 |                          0.9027 |      0.9962 |                                 0.9401 |                         0.9146 |    0.9027 |               0.9004 |           nan      |
+| D: drop log_loan_amount              | control  |     0.8073 |                          0.9004 |      0.9939 |                                 0.9406 |                         0.9122 |    0.9004 |               0.9001 |           nan      |
+| D: drop log_property_value           | control  |     0.7978 |                          0.8962 |      0.997  |                                 0.9354 |                         0.9194 |    0.8962 |               0.9009 |           nan      |
+| D: drop ltv                          | control  |     0.8036 |                          0.906  |      0.9947 |                                 0.9367 |                         0.9102 |    0.906  |               0.9012 |           nan      |
+| D: drop dti_num                      | control  |     0.7463 |                          0.8919 |      0.9886 |                                 0.9342 |                         0.9221 |    0.8919 |               0.9025 |           nan      |
+| D: drop loan_type_code               | control  |     0.8018 |                          0.9072 |      0.9943 |                                 0.9456 |                         0.8954 |    0.8954 |               0.9    |           nan      |
+| E: all features + random score noise | control  |     0.7997 |                          0.9051 |      0.9964 |                                 0.948  |                         0.9084 |    0.9051 |               0.901  |             0.3326 |
 

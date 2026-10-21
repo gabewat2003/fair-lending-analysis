@@ -2,6 +2,7 @@
 import altair as alt
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.proportion import (confint_proportions_2indep,
@@ -11,8 +12,12 @@ from src import config
 
 
 def disparity_table(df: pd.DataFrame, group_col: str, ref: str,
-                    outcome: str = "approved") -> pd.DataFrame:
-    """Approval rate, AIR and two-sample tests for every group vs the reference group."""
+                    outcome: str = "approved", cluster: str | None = None) -> pd.DataFrame:
+    """Approval rate, AIR and two-sample tests for every group vs the reference group.
+
+    The pooled z-test treats applications as independent. Pass `cluster` (e.g.
+    "lei") to also get the same gap tested with lender-clustered standard errors.
+    """
     d = df.dropna(subset=[outcome])
     tbl = (d.groupby(group_col, observed=True)
              .agg(apps=(outcome, "size"), approvals=(outcome, "sum")))
@@ -43,11 +48,42 @@ def disparity_table(df: pd.DataFrame, group_col: str, ref: str,
     tbl[["diff_ci_low_pp", "diff_ci_high_pp", "p_ztest", "p_fisher"]] = rows
 
     mask = tbl.index != ref
+    tbl["z_ztest"] = np.nan
+    tbl.loc[mask, "z_ztest"] = [proportions_ztest([r.approvals, a_ref], [r.apps, n_ref])[0]
+                                for _, r in tbl[mask].iterrows()]
     tbl["p_holm"] = np.nan
     tbl.loc[mask, "p_holm"] = multipletests(tbl.loc[mask, "p_ztest"], method="holm")[1]
+    if cluster is not None:
+        cl = clustered_gap(d, group_col, ref, outcome, cluster)
+        tbl = tbl.join(cl)
+        tbl["p_holm_clustered"] = np.nan
+        tbl.loc[mask, "p_holm_clustered"] = multipletests(
+            tbl.loc[mask, "p_clustered"], method="holm")[1]
     tbl["small_n"] = tbl["apps"] < config.MIN_GROUP_N
     tbl["is_reference"] = ~mask
     return tbl.sort_values("apps", ascending=False).rename_axis("group").reset_index()
+
+
+def clustered_gap(d: pd.DataFrame, group_col: str, ref: str, outcome: str,
+                  cluster: str) -> pd.DataFrame:
+    """Raw gap vs the reference with standard errors clustered by `cluster` (lender).
+
+    A saturated linear model `outcome ~ group dummies` reproduces each raw
+    difference in rates exactly; only the standard error changes. Applications
+    at the same lender are not independent, so the pooled z-test overstates
+    precision. Clustering matches the SEs used in the Step 2 regressions.
+    """
+    d = d.dropna(subset=[cluster])
+    groups = [g for g in d[group_col].unique() if g != ref]
+    X = pd.DataFrame({str(g): (d[group_col] == g).astype(float) for g in groups}, index=d.index)
+    X.insert(0, "const", 1.0)
+    res = sm.OLS(d[outcome].astype(float), X).fit(
+        cov_type="cluster", cov_kwds={"groups": pd.factorize(d[cluster])[0]})
+    out = pd.DataFrame({"se_clustered_pp": res.bse[1:] * 100,
+                        "z_clustered": res.tvalues[1:],
+                        "p_clustered": res.pvalues[1:]})
+    out.index = groups
+    return out
 
 
 def approval_chart(tbl: pd.DataFrame, title: str) -> alt.LayerChart:
@@ -112,17 +148,19 @@ def main() -> None:
     specs = [("derived_race", config.REF_RACE), ("derived_ethnicity", config.REF_ETHNICITY),
              ("derived_sex", config.REF_SEX), ("applicant_age", config.REF_AGE)]
     for col, ref in specs:
-        tbl = disparity_table(df, col, ref)
+        tbl = disparity_table(df, col, ref, cluster="lei")
         tbl.to_csv(config.TABLE_DIR / f"step1_{col}.csv", index=False)
-        print(f"\n{col}\n", tbl[["group", "apps", "approval_rate", "AIR", "diff_pp", "p_holm"]]
-              .to_string(index=False))
+        print(f"\n{col}\n", tbl[["group", "apps", "approval_rate", "AIR", "diff_pp", "z_ztest",
+                                 "z_clustered", "p_holm_clustered"]].to_string(index=False))
+        if col == "derived_race":
+            race = tbl
 
-    race = disparity_table(df, "derived_race", config.REF_RACE)
     save_chart(approval_chart(race, "Approval rate by race (95% CI), 2023 home purchase, GA/IL/TX/MD"),
                "step1_approval_by_race")
 
     # Sensitivity: originated (1) vs denied (3) only.
-    disparity_table(df, "derived_race", config.REF_RACE, outcome="approved_strict").to_csv(
+    disparity_table(df, "derived_race", config.REF_RACE, outcome="approved_strict",
+                    cluster="lei").to_csv(
         config.TABLE_DIR / "step1_derived_race_strict.csv", index=False)
 
     # Race x state: where are raw gaps largest?

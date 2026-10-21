@@ -53,6 +53,8 @@ def main() -> None:
         "black_rate": float(s1.loc[black, "approval_rate"]),
         "black_air": float(s1.loc[black, "AIR"]),
         "black_raw_diff_pp": float(s1.loc[black, "diff_pp"]),
+        "black_z_pooled": float(s1.loc[black, "z_ztest"]),
+        "black_z_lender_clustered": float(s1.loc[black, "z_clustered"]),
         "black_ame_pp": {m: float(r.ame_pp) for m, r in
                          ame[ame.group == black].set_index("model").iterrows()},
         "black_ame_ci_m1": [float(x) for x in
@@ -60,6 +62,7 @@ def main() -> None:
         "proxy_auc": {f"{r.target} | {r.feature_set}": round(float(r.test_auc), 4)
                       for r in auc.itertuples()},
         "ablation": {m: {"auc": None if pd.isna(r.test_auc) else round(float(r.test_auc), 4),
+                         "black_air": round(float(r[f"AIR {black}"]), 4),
                          "min_air": round(float(r.min_AIR), 4)} for m, r in abl.iterrows()},
     }
     df = pd.read_parquet(config.ANALYSIS_PATH, columns=["approved"])

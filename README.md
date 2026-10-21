@@ -1,6 +1,6 @@
 # Fair Lending Analysis on HMDA Mortgage Data
 
-> In 635k 2023 home-purchase decisions across GA, IL, TX and MD, Black applicants were approved 8.8 percentage points less often than White applicants (AIR 0.904). About half of that gap remains after controlling for HMDA underwriting factors and lender (−4.9 pp). Neighborhood geography alone predicts applicant race with an AUC of 0.83. Removing it from a race-blind approval model narrows the disparity (AIR 0.902 → 0.929) at a cost of about 1 AUC point.
+> In 635k 2023 home-purchase decisions across GA, IL, TX and MD, Black applicants were approved 8.8 percentage points less often than White applicants (AIR 0.904). About half of that gap remains after controlling for HMDA underwriting factors and lender (−4.9 pp). Neighborhood geography alone predicts applicant race with an AUC of 0.83. Removing it from a race-blind approval model narrows the Black–White disparity (Black AIR 0.902 → 0.929) at a cost of about 1 AUC point. Accuracy-matched controls show this is not just the model getting worse: removing a non-geographic feature with the same AUC cost, or adding random noise to the scores, leaves Black AIR at 0.90–0.91.
 
 **Stack:** Python · pandas · statsmodels · pyfixest · scikit-learn · Altair
 
@@ -19,7 +19,6 @@
 
 This project is a **statistical screening analysis**, the first thing a compliance or analytics team runs. It flags where to look. It cannot prove discrimination (see [Limitations](#5-limitations)).
 
-<!-- DRAFT: personalize. This paragraph is meant to be in your own voice; rewrite it around your own interest in law. -->
 Fair lending sits where statistics and law meet, so neither team can do this work alone. Risk & Analytics can measure a gap, but whether that gap is legally significant depends on questions only Legal and Compliance can answer: Is there a legitimate business justification? Is there a less discriminatory alternative? Which protected bases and which products are in scope? Legal, in turn, needs analysts to turn those questions into tests that can be repeated and defended. That pairing interests me because the legal concept of disparate impact maps directly onto how machine-learning models fail. A model that never sees race can still learn it from ZIP code, tract demographics or property values, because those features carry the history of segregation and unequal access to credit. Section 3, Step 3 of this project tests for exactly that: whether "neutral" inputs act as proxies, and whether removing them is a workable less-discriminatory alternative.
 
 ---
@@ -97,8 +96,8 @@ HMDA API ──► download.py ──► clean.py ──► analysis.parquet
       ▼                                        ▼                                ▼
  1. Raw disparities                  2. Controlled regression           3. Proxy analysis
  disparities.py                      regression.py                      proxies.py
- (rates, AIR, z-tests,               (logit + AMEs; LPM with            (predict race from "neutral"
-  Holm, CIs)                          lender fixed effects)              features; ablation)
+ (rates, AIR, lender-                (logit + AMEs; LPM with            (predict race from "neutral"
+  clustered tests, Holm)              lender fixed effects)              features; ablation + controls)
       │                                        │                                │
       └───────────────┬────────────────────────┴────────────────────────────────┘
                       ▼
@@ -112,7 +111,8 @@ For each group, the screen computes:
 - the approval rate with a Wilson 95% CI;
 - the **AIR** (group approval rate ÷ reference approval rate);
 - the difference in percentage points, with a Newcombe 95% CI;
-- a two-proportion z-test against the reference group, with **Holm** correction across groups. Fisher's exact test is used as a cross-check wherever a cell count is under 10.
+- a two-proportion z-test against the reference group, with **Holm** correction across groups. Fisher's exact test is used as a cross-check wherever a cell count is under 10;
+- the same gap tested with **standard errors clustered by lender**, from a saturated linear model (`approved ~ group dummies`, CRV1 by LEI). The pooled z-test treats all 635k applications as independent, but applications at the same lender share policies and outcomes, so it overstates precision. The clustered test matches the Step 2 regressions and is the one the significance claims rely on.
 
 Groups under 500 applications are flagged `small_n`.
 
@@ -163,6 +163,15 @@ An AUC well above 0.5 means the features leak group information. Permutation imp
 
 Each model's scores are turned into decisions at the threshold that reproduces the observed training approval rate (about 90%). AIR is then computed on the predicted approvals in the test set. If dropping a proxy narrows the disparity at little cost in accuracy, that is a **less-discriminatory-alternative**-style finding, which is the concept regulators care about.
 
+**What the model is trained on.** The approval models are trained on the lenders' *observed* decisions, and those decisions are exactly what this project is testing. So "accuracy" here means agreement with decisions that may themselves be disparate. A model that matches them perfectly would reproduce any disparity they contain, and an AUC loss is not purely a business cost.
+
+**Accuracy-matched controls.** Any loss of accuracy pushes predicted approvals toward random, and random approvals have an AIR of 1. So a model that simply got worse would show a narrower gap for no substantive reason. Two controls test this:
+
+- D: drop one non-geographic feature at a time (income, loan amount, property value, CLTV, DTI, loan type), two of which (property value and DTI) cost more AUC than dropping geography;
+- E: model A with race-blind Gaussian noise added to its log-odds scores, scaled so its test AUC exactly matches model B's.
+
+If B's narrower gap came from lost accuracy alone, D and E should narrow it as much.
+
 ### Step 4: Denial reasons
 
 Among denied applications, I tabulated the share of each primary denial reason (`denial_reason-1`) within each race group. The results are descriptive and only useful for generating hypotheses.
@@ -190,7 +199,7 @@ All numbers below are generated by `make analyze` into [`reports/tables/`](repor
 ![Approval rate by race](reports/figures/step1_approval_by_race.png)
 
 - **No group with 500 or more applications falls below the 0.80 four-fifths line.** The lowest AIRs are for 2+ minority races (0.888) and Black applicants (0.904). Mortgage approval rates are high overall (90%), which compresses ratios toward 1, so a 0.90 AIR still means a gap of almost 9 pp. This is one reason the four-fifths rule is a weak screen for lending.
-- **Every gap except Joint is statistically significant after Holm correction.**
+- **Every gap except Joint is statistically significant after Holm correction, with lender-clustered standard errors.** Clustering shrinks the test statistics a lot (Black vs. White: pooled z = −80.4, clustered z = −10.6, clustered SE 0.84 pp), but no conclusion changes. The smallest group, Free Form Text Only, has clustered Holm p = 0.013.
 - **The pattern holds in every state.** The raw Black–White gap is −7.9 pp in TX, −8.9 pp in MD, −9.8 pp in GA and −12.2 pp in IL (`step1_race_by_state.csv`).
 - **Ethnicity:** Hispanic applicants were approved at 87.9% vs 91.0% for non-Hispanic applicants (AIR 0.966, −3.1 pp). The controlled m1 odds ratio is 0.77 [0.69, 0.86].
 - **Sex and age (Step 1 only):** Female applicants were approved 0.9 pp less often than male applicants (AIR 0.990). Age differences are within ±2.3 pp of the 35–44 group (AIR 0.98–1.03). The exception is the 119 applications with age not available.
@@ -230,10 +239,19 @@ Geography is the strongest proxy. Six tract- and MSA-level fields alone separate
 | A: all features | 0.8105 | 0.902 | 0.994 | 0.940 | 0.910 | 0.902 |
 | **B: drop all geography** | **0.7997** | **0.929** | 1.000 | 0.949 | 0.923 | **0.923** |
 | C: drop tract minority % only | 0.8097 | 0.908 | 0.995 | 0.942 | 0.917 | 0.908 |
+| *Controls: accuracy loss without removing geography* | | | | | | |
+| D: drop log income | 0.8071 | 0.903 | 0.996 | 0.940 | 0.915 | 0.903 |
+| D: drop log loan amount | 0.8073 | 0.900 | 0.994 | 0.941 | 0.912 | 0.900 |
+| D: drop log property value | 0.7978 | 0.896 | 0.997 | 0.935 | 0.919 | 0.896 |
+| D: drop CLTV | 0.8036 | 0.906 | 0.995 | 0.937 | 0.910 | 0.906 |
+| D: drop loan type | 0.8018 | 0.907 | 0.994 | 0.946 | 0.895 | 0.895 |
+| D: drop DTI | 0.7463 | 0.892 | 0.989 | 0.934 | 0.922 | 0.892 |
+| E: A + random score noise (AUC matched to B) | 0.7997 | 0.905 | 0.996 | 0.948 | 0.908 | 0.905 |
 
-- **Dropping geography raises the minimum AIR from 0.902 to 0.923, at a cost of 1.1 AUC points.** That is the shape of a less discriminatory alternative: a meaningful reduction in disparity for a small loss in accuracy. Whether the tradeoff is acceptable is a business and legal judgment, not a statistical one.
+- **Dropping geography raises the Black AIR from 0.902 to 0.929, at a cost of 1.1 AUC points.** The minimum AIR across the four larger minority groups rises from 0.902 to 0.923. That is the shape of a less discriminatory alternative: a meaningful reduction in disparity for a small loss in accuracy. Whether the tradeoff is acceptable is a business and legal judgment, not a statistical one.
+- **The narrowing is not just lost accuracy.** Dropping property value costs *more* AUC than dropping geography (0.7978 vs 0.7997) and slightly *widens* the Black gap (AIR 0.896). Adding random noise to model A until its AUC equals model B's moves the Black AIR only from 0.902 to 0.905. Dropping DTI costs 6 AUC points and widens the gap. Only removing geography produces the shift to 0.929.
 - **Dropping only tract minority % barely helps** (0.902 → 0.908), because the other geographic fields reconstruct it. Removing the obviously sensitive column is not enough; the information has to be removed.
-- Model A's Black AIR (0.902) is close to the AIR of the observed decisions (0.909). An approval model trained on these outcomes, without ever seeing race, reproduces the observed disparity.
+- Model A's Black AIR (0.902) is close to the AIR of the observed decisions (0.909). An approval model trained on these outcomes, without ever seeing race, reproduces the observed disparity. Because model A is trained on the decisions under test, matching them is not by itself evidence that the model is fair or justified.
 
 ### 4.4 Denial reasons (denied applications)
 
@@ -243,7 +261,7 @@ DTI is the most common primary denial reason in every group. It accounts for 43%
 
 ### 4.5 Summary
 
-> Raw approval rates differ by 8.8 pp between Black and White applicants (AIR = 0.904). After controlling for income, loan size, CLTV, DTI, loan type and state, the gap falls to 5.9 pp (95% CI: 5.0–6.8). With lender fixed effects it falls to 4.9 pp. Geographic features predict Black vs. White group membership with an AUC of 0.83. Removing them from a race-blind approval model raises the minimum AIR from 0.902 to 0.923, at a cost of 1.1 AUC points.
+> Raw approval rates differ by 8.8 pp between Black and White applicants (AIR = 0.904). After controlling for income, loan size, CLTV, DTI, loan type and state, the gap falls to 5.9 pp (95% CI: 5.0–6.8). With lender fixed effects it falls to 4.9 pp. Geographic features predict Black vs. White group membership with an AUC of 0.83. Removing them from a race-blind approval model raises the Black AIR from 0.902 to 0.929, at a cost of 1.1 AUC points. Controls with the same accuracy loss but geography kept leave the Black AIR between 0.896 and 0.907.
 
 These results are a **screening flag** for deeper review, not a finding of discrimination. The memo lists the next steps.
 
@@ -265,12 +283,11 @@ These results are a **screening flag** for deeper review, not a finding of discr
 
 ## 6. AI-assisted development note
 
-<!-- DRAFT: personalize. Edit to reflect what you personally reviewed. -->
 I built this project with an AI coding assistant (Claude Code). I set the scope (states, outcome definition, which groups get the full pipeline, lender fixed effects), and I treated its output as a draft to verify, not as an answer. These checks were run:
 
 - **Counts add up.** Group counts for race, ethnicity, sex and age sum to the full sample. This is asserted in `clean.py`, and the toy-data `disparity_table` totals are checked in `tests/test_disparities.py`.
-- **AIR and z-test by hand.** Unit tests compare the AIR and two-proportion z-test against hand-computed values on a toy table. On the real data, I recomputed the Black AIR from the raw counts: (74,088 / 88,848) ÷ (334,750 / 362,980) = 0.9042. The pooled z statistic came out at −80.4, which matches the pipeline.
-- **Parsing rules.** There are unit tests for every DTI string format, for `NA`/`Exempt` handling, for the CLTV bounds and for the `action_taken` mapping (23 tests, `make test`).
+- **AIR and z-test by hand.** Unit tests compare the AIR and two-proportion z-test against hand-computed values on a toy table. On the real data, I recomputed the Black AIR from the raw counts: (74,088 / 88,848) ÷ (334,750 / 362,980) = 0.9042. The pooled z statistic came out at −80.4, which matches the pipeline. That pooled test assumes independent applications. The lender-clustered version (z = −10.6) is the one used for inference, and unit tests check that it reduces to the unpooled SE with one application per cluster and widens when outcomes are correlated within lender.
+- **Parsing rules.** There are unit tests for every DTI string format, for `NA`/`Exempt` handling, for the CLTV bounds and for the `action_taken` mapping (25 tests in total, `make test`).
 - **Coefficient signs.** Log income is positive, and high DTI bands are negative. These checks are written to `step2_sign_checks.csv` on each run.
 - **Train/test separation.** Both proxy pipelines assert that the train and test indices are disjoint.
 - **Bugs and surprises caught along the way:**

@@ -4,8 +4,8 @@
 Dep. Variable:               approved   No. Observations:               611831
 Model:                          Logit   Df Residuals:                   611818
 Method:                           MLE   Df Model:                           12
-Date:                Sun, 18 Oct 2026   Pseudo R-squ.:                 0.02284
-Time:                        19:55:01   Log-Likelihood:            -1.8713e+05
+Date:                Wed, 21 Oct 2026   Pseudo R-squ.:                 0.02284
+Time:                        14:45:57   Log-Likelihood:            -1.8713e+05
 converged:                       True   LL-Null:                   -1.9150e+05
 Covariance Type:              cluster   LLR p-value:                     0.000
 ==================================================================================================================
@@ -32,8 +32,8 @@ eth_joint                                         -0.0709      0.056     -1.267 
 Dep. Variable:               approved   No. Observations:               611831
 Model:                          Logit   Df Residuals:                   611798
 Method:                           MLE   Df Model:                           32
-Date:                Sun, 18 Oct 2026   Pseudo R-squ.:                  0.1974
-Time:                        19:55:01   Log-Likelihood:            -1.5371e+05
+Date:                Wed, 21 Oct 2026   Pseudo R-squ.:                  0.1974
+Time:                        14:45:57   Log-Likelihood:            -1.5371e+05
 converged:                       True   LL-Null:                   -1.9150e+05
 Covariance Type:              cluster   LLR p-value:                     0.000
 ==================================================================================================================
@@ -80,8 +80,8 @@ log_loan_amount                                    0.1544      0.086      1.797 
 Dep. Variable:        approved_strict   No. Observations:               594488
 Model:                          Logit   Df Residuals:                   594455
 Method:                           MLE   Df Model:                           32
-Date:                Sun, 18 Oct 2026   Pseudo R-squ.:                  0.1991
-Time:                        19:55:01   Log-Likelihood:            -1.5198e+05
+Date:                Wed, 21 Oct 2026   Pseudo R-squ.:                  0.1991
+Time:                        14:45:57   Log-Likelihood:            -1.5198e+05
 converged:                       True   LL-Null:                   -1.8975e+05
 Covariance Type:              cluster   LLR p-value:                     0.000
 ==================================================================================================================

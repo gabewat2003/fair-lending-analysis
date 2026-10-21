@@ -38,6 +38,26 @@ def test_ztest_by_hand(toy):
     assert t.loc["B", "p_ztest"] == pytest.approx(p, rel=1e-6)
 
 
+def test_clustered_se_singletons_match_unpooled(toy):
+    # One cluster per row: the clustered SE reduces to the robust (unpooled) SE,
+    # up to the small-sample factor sqrt(G/(G-1) * (N-1)/(N-K)).
+    d = toy.assign(lei=range(len(toy)))
+    t = disparity_table(d, "grp", "Ref", cluster="lei").set_index("group")
+    p1, p2, n1, n2 = 60 / 80, 90 / 100, 80, 100
+    se = math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2) * 100
+    assert t.loc["B", "se_clustered_pp"] == pytest.approx(se, rel=0.02)
+    assert math.isnan(t.loc["Ref", "z_clustered"])
+
+
+def test_clustering_widens_se_when_lenders_differ(toy):
+    # Approvals spread over six lenders, every denial at one lender: outcomes are
+    # correlated within lender, so the clustered SE should be wider than the pooled one.
+    d = toy.assign(lei=["L7" if a == 0 else f"L{i % 6 + 1}"
+                        for i, a in enumerate(toy["approved"])])
+    t = disparity_table(d, "grp", "Ref", cluster="lei").set_index("group")
+    assert abs(t.loc["B", "z_clustered"]) < abs(t.loc["B", "z_ztest"])
+
+
 def test_small_cell_triggers_fisher(toy):
     t = disparity_table(toy, "grp", "Ref").set_index("group")
     assert not math.isnan(t.loc["C", "p_fisher"])   # C has a cell of 1
